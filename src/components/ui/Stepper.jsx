@@ -1,7 +1,9 @@
 import React from 'react'
 
-export default function Stepper({ qty, onAdd, onRemove, primaryColor, maxReached }) {
+export default function Stepper({ qty, onAdd, onRemove, primaryColor, maxReached, compact }) {
   const pc = primaryColor || '#0ea5e9'
+  const btnSize = compact ? 28 : 34
+  const fontSize = compact ? 13 : 14
   return (
     <div style={{
       display: 'inline-flex', alignItems: 'center', gap: 0,
@@ -10,26 +12,26 @@ export default function Stepper({ qty, onAdd, onRemove, primaryColor, maxReached
       borderRadius: 'var(--r-pill)',
       overflow: 'hidden', flexShrink: 0,
     }}>
-      <StepBtn onClick={onRemove} label="−" />
+      <StepBtn onClick={onRemove} label="−" size={btnSize} />
       <span style={{
-        minWidth: 32, textAlign: 'center',
-        fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14,
+        minWidth: compact ? 22 : 32, textAlign: 'center',
+        fontFamily: 'var(--font-display)', fontWeight: 700, fontSize,
         color: 'var(--text-primary)', userSelect: 'none', letterSpacing: '.02em',
       }}>
         {qty}
       </span>
-      <StepBtn onClick={maxReached ? undefined : onAdd} label="+" disabled={maxReached} />
+      <StepBtn onClick={maxReached ? undefined : onAdd} label="+" disabled={maxReached} size={btnSize} />
     </div>
   )
 }
 
-function StepBtn({ onClick, label, disabled }) {
+function StepBtn({ onClick, label, disabled, size = 34 }) {
   return (
     <button
       onClick={onClick}
       disabled={disabled}
       style={{
-        width: 34, height: 34, border: 'none',
+        width: size, height: size, border: 'none',
         background: 'transparent',
         color: disabled ? 'var(--border-subtle)' : 'var(--text-secondary)',
         fontSize: 16, fontWeight: 500,
