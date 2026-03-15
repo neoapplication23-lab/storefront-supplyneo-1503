@@ -5,21 +5,21 @@ import { isValidImageSrc } from '../../utils/image'
 import { t } from '../../i18n'
 
 export default function Hero({ data, departureTime }) {
-  const pc            = data.appearance?.primaryColor || '#2563eb'
-  const logo          = data.appearance?.logo || null
-  const businessName  = data.appearance?.businessName || ''
-  const headerImage   = data.appearance?.headerImage || null
+  const pc            = data?.appearance?.primaryColor || '#2563eb'
+  const logo          = data?.appearance?.logo || null
+  const businessName  = data?.appearance?.businessName || ''
+  const headerImage   = data?.appearance?.headerImage || null
   const [logoErr, setLogoErr] = useState(false)
 
-  const lang          = data.appearance?.language || 'en'
-  const eyebrowText   = data.appearance?.heroEyebrow  || t(lang, 'onTheWater')
-  const subText       = data.appearance?.heroSubline   || t(lang, 'yourGearReady')
-  const overlayColor  = data.appearance?.heroOverlayColor  || '#000000'
-  const overlayOpacity = parseFloat(data.appearance?.heroOverlayOpacity ?? 0.45)
+  const lang          = data?.appearance?.language || 'en'
+  const eyebrowText   = data?.appearance?.heroEyebrow  || t(lang, 'onTheWater')
+  const subText       = data?.appearance?.heroSubline   || t(lang, 'yourGearReady')
+  const overlayColor  = data?.appearance?.heroOverlayColor  || '#000000'
+  const overlayOpacity = parseFloat(data?.appearance?.heroOverlayOpacity ?? 0.45)
 
   const hasLogo  = isValidImageSrc(logo) && !logoErr
   const hasImage = isValidImageSrc(headerImage)
-  const firstName = (data.clientName || '').split(' ')[0] || 'there'
+  const firstName = (data?.clientName || '').split(' ')[0] || 'there'
 
   const hexToRgb = hex => {
     const h = hex.length === 7 ? hex : '#000000'
@@ -28,11 +28,11 @@ export default function Hero({ data, departureTime }) {
   const rgb = hexToRgb(overlayColor)
 
   const chips = [
-    data.boat?.boat_name && { icon: '⛵', label: data.boat.boat_name },
-    data.date            && { icon: '📅', label: data.date },
-    data.checkIn         && { icon: '🕐', label: `${t(lang,'checkIn')} ${data.checkIn}` },
-    data.marina          && { icon: '⚓', label: data.marina },
-    data.berth           && { icon: '🪝', label: `${t(lang,'berth')} ${data.berth}` },
+    data?.boat?.boat_name && { icon: '⛵', label: data.boat.boat_name },
+    data?.date            && { icon: '📅', label: data?.date },
+    data?.checkIn         && { icon: '🕐', label: `${t(lang,'checkIn')} ${data?.checkIn}` },
+    data?.marina          && { icon: '⚓', label: data?.marina },
+    data?.berth           && { icon: '🪝', label: `${t(lang,'berth')} ${data?.berth}` },
   ].filter(Boolean)
 
   // With header image: compact hero band
@@ -72,8 +72,8 @@ export default function Hero({ data, departureTime }) {
                   <span style={{ fontSize: 10 }}>{c.icon}</span>{c.label}
                 </span>
               ))}
-              {(departureTime || (data.date && data.checkIn)) && (
-                <CountdownTimer departureTime={departureTime} date={data.date} checkIn={data.checkIn} primaryColor="#fff" lang={lang} />
+              {(departureTime || (data?.date && data?.checkIn)) && (
+                <CountdownTimer departureTime={departureTime} date={data?.date} checkIn={data?.checkIn} primaryColor="#fff" lang={lang} />
               )}
             </div>
           </div>
@@ -112,8 +112,8 @@ export default function Hero({ data, departureTime }) {
               <span style={{ fontSize: 11 }}>{c.icon}</span>{c.label}
             </span>
           ))}
-          {(departureTime || (data.date && data.checkIn)) && (
-            <CountdownTimer departureTime={departureTime} date={data.date} checkIn={data.checkIn} primaryColor={pc} lang={lang} />
+          {(departureTime || (data?.date && data?.checkIn)) && (
+            <CountdownTimer departureTime={departureTime} date={data?.date} checkIn={data?.checkIn} primaryColor={pc} lang={lang} />
           )}
         </div>
       </div>
