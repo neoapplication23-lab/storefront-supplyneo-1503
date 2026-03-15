@@ -34,7 +34,7 @@ export default function BookingPage({ code }) {
   const [showStore, setShowStore]       = useState(false)
   const [activeFilter, setActiveFilter]  = useState(null)
   const [selectedCollection, setSelectedCollection] = useState(null)
-  const [activeLang, setActiveLang] = useState(null) // null = use appearance default
+  const [activeLang, setActiveLang] = useState(null)
 
   const products    = data?.products || []
   const cartUpsells = useUpsell(items, products, 1)
@@ -99,7 +99,7 @@ export default function BookingPage({ code }) {
     <NotFound message="Could not load your booking. Please check your connection and try again." />
   )
 
-  // Normalise data — ensure appearance always exists
+  // Ensure appearance always exists
   if (!data.appearance) data = { ...data, appearance: {} }
 
   const pc          = data?.appearance?.primaryColor || '#0ea5e9'
