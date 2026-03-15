@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import { t } from '../../i18n'
 
 /**
  * Parses a departure ISO string OR builds one from date + checkIn strings.
@@ -47,7 +48,7 @@ function getTimeLeft(target) {
 
 function pad(n) { return String(n).padStart(2, '0') }
 
-export default function CountdownTimer({ departureTime, date, checkIn, primaryColor }) {
+export default function CountdownTimer({ departureTime, date, checkIn, primaryColor, lang = 'en' }) {
   const pc = primaryColor || '#0ea5e9'
 
   const target = parseDepartureTime(departureTime, date, checkIn)
@@ -69,8 +70,8 @@ export default function CountdownTimer({ departureTime, date, checkIn, primaryCo
   const color      = isUnder1h ? '#ef4444' : isUnder24h ? '#f59e0b' : pc
 
   const segments = timeLeft.d > 0
-    ? [{ val: pad(timeLeft.d), unit: 'd' }, { val: pad(timeLeft.h), unit: 'h' }, { val: pad(timeLeft.m), unit: 'm' }]
-    : [{ val: pad(timeLeft.h), unit: 'h' }, { val: pad(timeLeft.m), unit: 'm' }, { val: pad(timeLeft.s), unit: 's' }]
+    ? [{ val: pad(timeLeft.d), unit: t(lang,'days') }, { val: pad(timeLeft.h), unit: t(lang,'hours') }, { val: pad(timeLeft.m), unit: t(lang,'minutes') }]
+    : [{ val: pad(timeLeft.h), unit: t(lang,'hours') }, { val: pad(timeLeft.m), unit: t(lang,'minutes') }, { val: pad(timeLeft.s), unit: t(lang,'seconds') }]
 
   return (
     <motion.div
