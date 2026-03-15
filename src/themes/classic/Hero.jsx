@@ -9,32 +9,32 @@ const stagger = { hidden: {}, show: { transition: { staggerChildren: .07, delayC
 const line = { hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { duration: .5, ease } } }
 
 export default function Hero({ data, departureTime }) {
-  const pc            = data.appearance?.primaryColor || '#2563eb'
-  const logo          = data.appearance?.logo || null
-  const businessName  = data.appearance?.businessName || ''
-  const headerImage   = data.appearance?.headerImage || data.appearance?.heroImage || null
-  const boat          = data.boat?.boat_name || ''
+  const pc            = data?.appearance?.primaryColor || '#2563eb'
+  const logo          = data?.appearance?.logo || null
+  const businessName  = data?.appearance?.businessName || ''
+  const headerImage   = data?.appearance?.headerImage || data?.appearance?.heroImage || null
+  const boat          = data?.boat?.boat_name || ''
   const [logoErr, setLogoErr] = useState(false)
 
   // Customisable copy & overlay
-  const lang          = data.appearance?.language || 'en'
-  const eyebrowText   = data.appearance?.heroEyebrow  || t(lang, 'onTheWater')
-  const subText       = data.appearance?.heroSubline   || t(lang, 'subHeadline')
-  const overlayColor  = data.appearance?.heroOverlayColor  || '#000000'
-  const overlayOpacity = parseFloat(data.appearance?.heroOverlayOpacity ?? 0.55)
+  const lang          = data?.appearance?.language || 'en'
+  const eyebrowText   = data?.appearance?.heroEyebrow  || t(lang, 'onTheWater')
+  const subText       = data?.appearance?.heroSubline   || t(lang, 'subHeadline')
+  const overlayColor  = data?.appearance?.heroOverlayColor  || '#000000'
+  const overlayOpacity = parseFloat(data?.appearance?.heroOverlayOpacity ?? 0.55)
 
   const hasHeader = isValidImageSrc(headerImage)
   const hasLogo   = isValidImageSrc(logo) && !logoErr
   const onDark    = hasHeader
 
-  const firstName = (data.clientName || '').split(' ')[0] || 'there'
+  const firstName = (data?.clientName || '').split(' ')[0] || 'there'
 
   const chips = [
     boat         && { icon: '⛵', label: boat },
-    data.date    && { icon: '📅', label: data.date },
-    data.checkIn && { icon: '🕐', label: `${t(lang,'checkIn')} ${data.checkIn}` },
-    data.marina  && { icon: '⚓', label: data.marina },
-    data.berth   && { icon: '🪝', label: `${t(lang,'berth')} ${data.berth}` },
+    data?.date    && { icon: '📅', label: data?.date },
+    data?.checkIn && { icon: '🕐', label: `${t(lang,'checkIn')} ${data?.checkIn}` },
+    data?.marina  && { icon: '⚓', label: data?.marina },
+    data?.berth   && { icon: '🪝', label: `${t(lang,'berth')} ${data?.berth}` },
   ].filter(Boolean)
 
   // Build rgba overlay from hex + opacity
@@ -165,9 +165,9 @@ export default function Hero({ data, departureTime }) {
         )}
 
         {/* Countdown */}
-        {(departureTime || (data.date && data.checkIn)) && (
+        {(departureTime || (data?.date && data?.checkIn)) && (
           <motion.div variants={line}>
-            <CountdownTimer departureTime={departureTime} date={data.date} checkIn={data.checkIn}
+            <CountdownTimer departureTime={departureTime} date={data?.date} checkIn={data?.checkIn}
               primaryColor={onDark ? '#fff' : pc} lang={lang} />
           </motion.div>
         )}
