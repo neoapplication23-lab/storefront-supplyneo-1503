@@ -2,28 +2,57 @@ import React from 'react'
 import BookingPage from './components/booking/BookingPage'
 import NotFound from './components/booking/NotFound'
 
-/**
- * Resolves booking code from multiple sources (in priority order):
- *  1. URL path segment  → /booking/XXXX  or  /store/booking/XXXX
- *  2. Query string      → ?booking=XXXX  or  ?code=XXXX
- *  3. Dev fallback      → VITE_DEV_BOOKING_CODE (only in development builds)
- */
 function resolveBookingCode() {
-  // 1 — path segment: /booking/<code>
   const pathMatch = window.location.pathname.match(/\/booking\/([^/?#]+)/)
   if (pathMatch?.[1]) return pathMatch[1]
-
-  // 2 — query string: ?booking=… or ?code=…
   const params = new URLSearchParams(window.location.search)
   const qCode = params.get('booking') || params.get('code')
   if (qCode) return qCode
-
-  // 3 — dev-only fallback (stripped from production bundle by Vite)
   if (import.meta.env.DEV && import.meta.env.VITE_DEV_BOOKING_CODE) {
     return import.meta.env.VITE_DEV_BOOKING_CODE
   }
-
   return null
+}
+
+// ── Error boundary to catch any unexpected render errors ──
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = { hasError: false, error: null }
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error }
+  }
+  componentDidCatch(error, info) {
+    console.error('BookingPage error:', error, info)
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{
+          minHeight: '100vh', display: 'flex', alignItems: 'center',
+          justifyContent: 'center', flexDirection: 'column', gap: 12,
+          fontFamily: 'system-ui, sans-serif', color: '#374151',
+          background: '#f9fafb', padding: 24,
+        }}>
+          <div style={{ fontSize: 48 }}>⚓</div>
+          <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>Loading your booking…</h2>
+          <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>Please refresh the page.</p>
+          <button
+            onClick={() => window.location.reload()}
+            style={{
+              marginTop: 8, padding: '10px 20px', borderRadius: 8,
+              background: '#2563eb', color: '#fff', border: 'none',
+              cursor: 'pointer', fontSize: 14, fontWeight: 600,
+            }}
+          >
+            Refresh
+          </button>
+        </div>
+      )
+    }
+    return this.props.children
+  }
 }
 
 export default function App() {
@@ -41,5 +70,9 @@ export default function App() {
     )
   }
 
-  return <BookingPage code={code} />
+  return (
+    <ErrorBoundary>
+      <BookingPage code={code} />
+    </ErrorBoundary>
+  )
 }
