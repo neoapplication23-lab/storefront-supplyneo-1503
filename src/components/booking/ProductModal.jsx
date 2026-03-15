@@ -48,12 +48,14 @@ export default function ProductModal({
 
   const panelStyle = isMobile ? {
     position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 401,
-    width: '100%', maxHeight: '92dvh',
-    borderRadius: '24px 24px 0 0', flexDirection: 'column',
+    width: '100%', maxHeight: '94dvh',
+    borderRadius: '20px 20px 0 0', flexDirection: 'column',
+    display: 'flex',
   } : {
     position: 'relative', width: '100%',
     maxWidth: 860, maxHeight: '88vh',
     borderRadius: 24, flexDirection: 'row',
+    display: 'flex',
   }
 
   const panelMotion = isMobile
