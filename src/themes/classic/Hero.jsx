@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { motion } from 'framer-motion'
 import CountdownTimer from '../../components/booking/CountdownTimer'
 import { isValidImageSrc } from '../../utils/image'
@@ -11,9 +11,6 @@ const line = { hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transiti
 export default function Hero({ data, departureTime }) {
   const appearance     = data?.appearance || {}
   const pc             = appearance.primaryColor    || '#2563eb'
-  const logo           = appearance.logo            || null
-  const businessName   = appearance.businessName    || ''
-  const masterLogo     = appearance.masterLogo      || null
   const lang           = appearance.language        || 'en'
 
   // Header image — strip whitespace from base64 to avoid ERR_INVALID_URL
@@ -31,12 +28,7 @@ export default function Hero({ data, departureTime }) {
   const titleColor     = appearance.heroTitleColor     || null
   const countdownColor = appearance.heroCountdownColor || null
 
-  const [logoErr, setLogoErr]             = useState(false)
-  const [masterLogoErr, setMasterLogoErr] = useState(false)
-
   const hasHeader     = isValidImageSrc(headerImage)
-  const hasLogo       = isValidImageSrc(logo) && !logoErr
-  const hasMasterLogo = isValidImageSrc(masterLogo) && !masterLogoErr
   const onDark        = hasHeader
   const firstName     = (data?.clientName || '').split(' ')[0] || 'there'
 
@@ -74,9 +66,7 @@ export default function Hero({ data, departureTime }) {
             position: 'absolute', inset: 0,
             backgroundImage: `url(${headerImage})`,
             backgroundSize: 'cover', backgroundPosition: 'center',
-            // Fixed parallax on desktop; scroll on iOS (fixed breaks on Safari mobile)
-            backgroundAttachment: 'fixed',
-            WebkitBackgroundAttachment: 'scroll',
+            backgroundAttachment: 'scroll',
           }} />
           <div style={{ position: 'absolute', inset: 0, background: `rgba(${rgb}, ${overlayOpacity})` }} />
           <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to bottom, transparent 0%, rgba(${rgb},.35) 55%, rgba(${rgb},.75) 100%)` }} />
@@ -88,49 +78,6 @@ export default function Hero({ data, departureTime }) {
           <div style={{ position: 'absolute', top: 0, right: 0, width: '55%', height: '100%', background: `radial-gradient(ellipse at 80% 30%, ${pc}18 0%, transparent 65%)` }} />
         </>
       )}
-
-      {/* ── Logos top-left: charter + master ── */}
-      <motion.div
-        initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: .45, ease, delay: .05 }}
-        style={{ position: 'absolute', top: 20, left: 'clamp(20px,4vw,48px)', display: 'flex', alignItems: 'center', gap: 10, zIndex: 3 }}
-      >
-        {hasLogo && (
-          <div style={{
-            height: 38, maxWidth: 120, borderRadius: 10, overflow: 'hidden', padding: '4px 8px',
-            background: onDark ? 'rgba(255,255,255,.15)' : 'rgba(255,255,255,.85)',
-            backdropFilter: 'blur(8px)',
-            border: `1px solid ${onDark ? 'rgba(255,255,255,.22)' : 'rgba(0,0,0,.06)'}`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: onDark ? '0 2px 8px rgba(0,0,0,.25)' : '0 1px 6px rgba(0,0,0,.08)',
-          }}>
-            <img src={logo} alt={businessName} onError={() => setLogoErr(true)}
-              style={{ height: '100%', maxHeight: 30, objectFit: 'contain' }} />
-          </div>
-        )}
-        {hasLogo && hasMasterLogo && (
-          <div style={{ width: 1, height: 24, background: onDark ? 'rgba(255,255,255,.3)' : 'rgba(0,0,0,.15)' }} />
-        )}
-        {hasMasterLogo && (
-          <div style={{
-            height: 38, maxWidth: 120, borderRadius: 10, overflow: 'hidden', padding: '4px 8px',
-            background: onDark ? 'rgba(255,255,255,.10)' : 'rgba(255,255,255,.70)',
-            backdropFilter: 'blur(8px)',
-            border: `1px solid ${onDark ? 'rgba(255,255,255,.15)' : 'rgba(0,0,0,.04)'}`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <img src={masterLogo} alt="" onError={() => setMasterLogoErr(true)}
-              style={{ height: '100%', maxHeight: 28, objectFit: 'contain', opacity: .8 }} />
-          </div>
-        )}
-        {!hasLogo && !hasMasterLogo && businessName && (
-          <span style={{
-            fontSize: 13, fontWeight: 600, letterSpacing: '.01em',
-            color: onDark ? 'rgba(255,255,255,.92)' : 'var(--text-secondary)',
-            textShadow: onDark ? '0 1px 4px rgba(0,0,0,.35)' : 'none',
-          }}>{businessName}</span>
-        )}
-      </motion.div>
 
       {/* ── Main content ── */}
       <motion.div variants={stagger} initial="hidden" animate="show" style={{

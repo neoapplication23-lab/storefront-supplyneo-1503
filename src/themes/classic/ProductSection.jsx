@@ -134,8 +134,8 @@ export default function ProductSection({ category, products, sectionId, primaryC
             animate="show"
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-              gap: 14,
+              gridTemplateColumns: 'repeat(auto-fill, minmax(min(160px, 100%), 1fr))',
+              gap: 'clamp(10px, 2vw, 14px)',
             }}
           >
             {visibleProducts.map(p => (
