@@ -99,8 +99,8 @@ export default function BookingPage({ code }) {
     <NotFound message="Could not load your booking. Please check your connection and try again." />
   )
 
-  const pc          = data.appearance?.primaryColor || '#0ea5e9'
-  const themeKey    = data.appearance?.storefrontTheme || data.appearance?.theme || 'classic'
+  const pc          = data?.appearance?.primaryColor || '#0ea5e9'
+  const themeKey    = data?.appearance?.storefrontTheme || data?.appearance?.theme || 'classic'
   const lang        = activeLang || data?.appearance?.language || 'en'
   const { Hero, CollectionGrid, ProductSection } = getTheme(themeKey)
   const bundles     = data.bundles    || []
@@ -179,7 +179,7 @@ export default function BookingPage({ code }) {
 
   return (
     <>
-      <Topbar appearance={data.appearance} cartCount={cartCount} cartTotal={cartTotal} onOpenCart={() => !bookingLocked && setCheckoutOpen(true)} lang={lang} onLangChange={setActiveLang} />
+      <Topbar appearance={data?.appearance || {}} cartCount={cartCount} cartTotal={cartTotal} onOpenCart={() => !bookingLocked && setCheckoutOpen(true)} lang={lang} onLangChange={setActiveLang} />
 
       <main>
         <Hero data={{ ...data, appearance: { ...(data?.appearance || {}), language: lang } }} departureTime={departureTime} />
