@@ -9,42 +9,45 @@ const stagger = { hidden: {}, show: { transition: { staggerChildren: .07, delayC
 const line = { hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { duration: .5, ease } } }
 
 export default function Hero({ data, departureTime }) {
-  const pc            = data?.appearance?.primaryColor || '#2563eb'
-  const logo          = data?.appearance?.logo || null
-  const businessName  = data?.appearance?.businessName || ''
-  const headerImage   = data?.appearance?.headerImage || data?.appearance?.heroImage || null
-  const boat          = data?.boat?.boat_name || ''
+  const appearance   = data?.appearance || {}
+  const pc           = appearance.primaryColor || '#2563eb'
+  const logo         = appearance.logo || null
+  const businessName = appearance.businessName || ''
+  const lang         = appearance.language || 'en'
+
+  // Header image — try multiple keys
+  const headerImage = appearance.headerImage || appearance.heroImage || appearance.coverImage || null
+
   const [logoErr, setLogoErr] = useState(false)
 
-  // Customisable copy & overlay
-  const lang          = data?.appearance?.language || 'en'
-  const eyebrowText   = data?.appearance?.heroEyebrow  || t(lang, 'onTheWater')
-  const subText       = data?.appearance?.heroSubline   || t(lang, 'subHeadline')
-  const overlayColor  = data?.appearance?.heroOverlayColor  || '#000000'
-  const overlayOpacity = parseFloat(data?.appearance?.heroOverlayOpacity ?? 0.55)
+  // Overlay settings from admin (with safe defaults)
+  const overlayColor   = appearance.heroOverlayColor || '#000000'
+  const overlayOpacity = parseFloat(appearance.heroOverlayOpacity ?? 0.55)
 
   const hasHeader = isValidImageSrc(headerImage)
   const hasLogo   = isValidImageSrc(logo) && !logoErr
   const onDark    = hasHeader
-
   const firstName = (data?.clientName || '').split(' ')[0] || 'there'
 
-  const chips = [
-    boat         && { icon: '⛵', label: boat },
-    data?.date    && { icon: '📅', label: data?.date },
-    data?.checkIn && { icon: '🕐', label: `${t(lang,'checkIn')} ${data?.checkIn}` },
-    data?.marina  && { icon: '⚓', label: data?.marina },
-    data?.berth   && { icon: '🪝', label: `${t(lang,'berth')} ${data?.berth}` },
-  ].filter(Boolean)
+  // eyebrow and subline always from i18n (language chosen by client)
+  const eyebrowText = t(lang, 'onTheWater')
+  const subText     = t(lang, 'subHeadline')
 
-  // Build rgba overlay from hex + opacity
   const hexToRgb = hex => {
-    const r = parseInt(hex.slice(1,3),16)
-    const g = parseInt(hex.slice(3,5),16)
-    const b = parseInt(hex.slice(5,7),16)
-    return `${r},${g},${b}`
+    try {
+      const h = (hex && hex.length === 7) ? hex : '#000000'
+      return `${parseInt(h.slice(1,3),16)},${parseInt(h.slice(3,5),16)},${parseInt(h.slice(5,7),16)}`
+    } catch { return '0,0,0' }
   }
-  const rgb = hexToRgb(overlayColor.length === 7 ? overlayColor : '#000000')
+  const rgb = hexToRgb(overlayColor)
+
+  const chips = [
+    data?.boat?.boat_name && { icon: '⛵', label: data.boat.boat_name },
+    data?.date            && { icon: '📅', label: data.date },
+    data?.checkIn         && { icon: '🕐', label: `${t(lang,'checkIn')} ${data.checkIn}` },
+    data?.marina          && { icon: '⚓', label: data.marina },
+    data?.berth           && { icon: '🪝', label: `${t(lang,'berth')} ${data.berth}` },
+  ].filter(Boolean)
 
   return (
     <section style={{
@@ -52,6 +55,7 @@ export default function Hero({ data, departureTime }) {
       minHeight: hasHeader ? 'clamp(340px, 50vh, 560px)' : 'clamp(200px, 26vh, 280px)',
       display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
     }}>
+
       {/* ── Background ── */}
       {hasHeader ? (
         <>
@@ -60,12 +64,10 @@ export default function Hero({ data, departureTime }) {
             backgroundImage: `url(${headerImage})`,
             backgroundSize: 'cover', backgroundPosition: 'center',
           }} />
-          {/* Custom colour + opacity overlay */}
           <div style={{
             position: 'absolute', inset: 0,
             background: `rgba(${rgb}, ${overlayOpacity})`,
           }} />
-          {/* Gradient fade to bottom */}
           <div style={{
             position: 'absolute', inset: 0,
             background: `linear-gradient(to bottom, transparent 0%, rgba(${rgb},.35) 55%, rgba(${rgb},.75) 100%)`,
@@ -83,6 +85,7 @@ export default function Hero({ data, departureTime }) {
             position: 'absolute', top: 0, right: 0, width: '55%', height: '100%',
             background: `radial-gradient(ellipse at 80% 30%, ${pc}18 0%, transparent 65%)`,
           }} />
+          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 1, background: 'var(--border-subtle, #e5e7eb)' }} />
         </>
       )}
 
@@ -108,21 +111,19 @@ export default function Hero({ data, departureTime }) {
         {businessName && (
           <span style={{
             fontSize: 13, fontWeight: 600, letterSpacing: '.01em',
-            color: onDark ? 'rgba(255,255,255,.92)' : 'var(--text-secondary)',
+            color: onDark ? 'rgba(255,255,255,.92)' : 'var(--text-secondary, #64748b)',
             textShadow: onDark ? '0 1px 4px rgba(0,0,0,.35)' : 'none',
           }}>{businessName}</span>
         )}
       </motion.div>
 
       {/* ── Main content ── */}
-      <motion.div variants={stagger} initial="hidden" animate="show"
-        style={{
-          position: 'relative', zIndex: 2, width: '100%', maxWidth: 860, margin: '0 auto',
-          padding: hasHeader
-            ? 'clamp(32px,5vw,56px) clamp(20px,4vw,48px)'
-            : 'clamp(20px,3vw,36px) clamp(20px,4vw,48px) clamp(24px,3.5vw,40px)',
-        }}
-      >
+      <motion.div variants={stagger} initial="hidden" animate="show" style={{
+        position: 'relative', zIndex: 2, width: '100%', maxWidth: 860, margin: '0 auto',
+        padding: hasHeader
+          ? 'clamp(32px,5vw,56px) clamp(20px,4vw,48px)'
+          : 'clamp(20px,3vw,36px) clamp(20px,4vw,48px) clamp(24px,3.5vw,40px)',
+      }}>
         {/* Eyebrow */}
         <motion.div variants={line} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
           <div style={{ width: 18, height: 2, borderRadius: 1, background: onDark ? 'rgba(255,255,255,.6)' : pc }} />
@@ -136,12 +137,13 @@ export default function Hero({ data, departureTime }) {
         <motion.h1 variants={line} style={{
           fontWeight: 700, fontSize: 'clamp(24px, 4.2vw, 46px)',
           lineHeight: 1.08, marginBottom: 14,
-          color: onDark ? '#fff' : 'var(--text-primary)', letterSpacing: '-.025em',
+          color: onDark ? '#fff' : 'var(--text-primary, #1e293b)', letterSpacing: '-.025em',
         }}>
           {t(lang, 'heyGreeting')} {firstName} —
           <span style={{
             display: 'block', fontWeight: 300, fontSize: '.68em',
-            color: onDark ? 'rgba(255,255,255,.72)' : 'var(--text-soft)', marginTop: 5, letterSpacing: '-.01em',
+            color: onDark ? 'rgba(255,255,255,.72)' : 'var(--text-soft, #94a3b8)',
+            marginTop: 5, letterSpacing: '-.01em',
           }}>{subText}</span>
         </motion.h1>
 
@@ -151,12 +153,12 @@ export default function Hero({ data, departureTime }) {
             {chips.map((c, i) => (
               <span key={i} style={{
                 display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 11px',
-                borderRadius: 'var(--r-pill)',
+                borderRadius: 100,
                 background: onDark ? 'rgba(255,255,255,.14)' : `${pc}0f`,
                 border: `1px solid ${onDark ? 'rgba(255,255,255,.2)' : `${pc}28`}`,
                 backdropFilter: onDark ? 'blur(10px)' : 'none',
                 fontSize: 12, fontWeight: 500,
-                color: onDark ? 'rgba(255,255,255,.9)' : 'var(--text-secondary)',
+                color: onDark ? 'rgba(255,255,255,.9)' : 'var(--text-secondary, #64748b)',
               }}>
                 <span style={{ fontSize: 11 }}>{c.icon}</span>{c.label}
               </span>
@@ -167,8 +169,13 @@ export default function Hero({ data, departureTime }) {
         {/* Countdown */}
         {(departureTime || (data?.date && data?.checkIn)) && (
           <motion.div variants={line}>
-            <CountdownTimer departureTime={departureTime} date={data?.date} checkIn={data?.checkIn}
-              primaryColor={onDark ? '#fff' : pc} lang={lang} />
+            <CountdownTimer
+              departureTime={departureTime}
+              date={data?.date}
+              checkIn={data?.checkIn}
+              primaryColor={onDark ? '#fff' : pc}
+              lang={lang}
+            />
           </motion.div>
         )}
       </motion.div>
