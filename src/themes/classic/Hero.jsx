@@ -9,29 +9,38 @@ const stagger = { hidden: {}, show: { transition: { staggerChildren: .07, delayC
 const line = { hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { duration: .5, ease } } }
 
 export default function Hero({ data, departureTime }) {
-  const appearance   = data?.appearance || {}
-  const pc           = appearance.primaryColor || '#2563eb'
-  const logo         = appearance.logo || null
-  const businessName = appearance.businessName || ''
-  const lang         = appearance.language || 'en'
-
-  // Header image — try multiple keys
-  const headerImage = appearance.headerImage || appearance.heroImage || appearance.coverImage || null
-
-  const [logoErr, setLogoErr] = useState(false)
-
-  // Overlay settings from admin (with safe defaults)
+  const appearance     = data?.appearance || {}
+  const pc             = appearance.primaryColor || '#2563eb'
+  const logo           = appearance.logo || null
+  const masterLogo     = appearance.masterLogo || null
+  const businessName   = appearance.businessName || ''
+  const lang           = appearance.language || 'en'
+  const headerImage    = appearance.headerImage || appearance.heroImage || appearance.coverImage || null
   const overlayColor   = appearance.heroOverlayColor || '#000000'
   const overlayOpacity = parseFloat(appearance.heroOverlayOpacity ?? 0.55)
 
-  const hasHeader = isValidImageSrc(headerImage)
-  const hasLogo   = isValidImageSrc(logo) && !logoErr
-  const onDark    = hasHeader
-  const firstName = (data?.clientName || '').split(' ')[0] || 'there'
+  // Custom colors — fall back to brand color (pc), then white on dark
+  const titleColor     = appearance.heroTitleColor || null
+  const countdownColor = appearance.heroCountdownColor || null
 
-  // eyebrow and subline always from i18n (language chosen by client)
-  const eyebrowText = t(lang, 'onTheWater')
-  const subText     = t(lang, 'subHeadline')
+  const [logoErr, setLogoErr]           = useState(false)
+  const [masterLogoErr, setMasterLogoErr] = useState(false)
+
+  const hasHeader    = isValidImageSrc(headerImage)
+  const hasLogo      = isValidImageSrc(logo) && !logoErr
+  const hasMasterLogo = isValidImageSrc(masterLogo) && !masterLogoErr
+  const onDark       = hasHeader
+  const firstName    = (data?.clientName || '').split(' ')[0] || 'there'
+
+  const eyebrowText  = t(lang, 'onTheWater')
+  const subText      = t(lang, 'subHeadline')
+
+  // Eyebrow + subline use brand accent color (pc) — always
+  const eyebrowColor = onDark ? 'rgba(255,255,255,.65)' : pc
+  const sublineColor = titleColor || (onDark ? 'rgba(255,255,255,.72)' : pc + 'aa')
+
+  // Title "Hey Name —" color
+  const headlineColor = titleColor || (onDark ? '#fff' : 'var(--text-primary, #1e293b)')
 
   const hexToRgb = hex => {
     try {
@@ -56,59 +65,71 @@ export default function Hero({ data, departureTime }) {
       display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
     }}>
 
-      {/* ── Background ── */}
+      {/* ── Background — attachment:fixed for parallax on mobile ── */}
       {hasHeader ? (
         <>
           <div style={{
             position: 'absolute', inset: 0,
             backgroundImage: `url(${headerImage})`,
-            backgroundSize: 'cover', backgroundPosition: 'center',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundAttachment: 'fixed',
           }} />
-          <div style={{
-            position: 'absolute', inset: 0,
-            background: `rgba(${rgb}, ${overlayOpacity})`,
-          }} />
-          <div style={{
-            position: 'absolute', inset: 0,
-            background: `linear-gradient(to bottom, transparent 0%, rgba(${rgb},.35) 55%, rgba(${rgb},.75) 100%)`,
-          }} />
-          <div style={{
-            position: 'absolute', bottom: 0, left: 0, right: 0, height: '45%',
-            background: `linear-gradient(to top, ${pc}28 0%, transparent 100%)`,
-            pointerEvents: 'none',
-          }} />
+          <div style={{ position: 'absolute', inset: 0, background: `rgba(${rgb}, ${overlayOpacity})` }} />
+          <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to bottom, transparent 0%, rgba(${rgb},.35) 55%, rgba(${rgb},.75) 100%)` }} />
+          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '45%', background: `linear-gradient(to top, ${pc}28 0%, transparent 100%)`, pointerEvents: 'none' }} />
         </>
       ) : (
         <>
           <div style={{ position: 'absolute', inset: 0, background: '#F8F7F5' }} />
-          <div style={{
-            position: 'absolute', top: 0, right: 0, width: '55%', height: '100%',
-            background: `radial-gradient(ellipse at 80% 30%, ${pc}18 0%, transparent 65%)`,
-          }} />
-          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 1, background: 'var(--border-subtle, #e5e7eb)' }} />
+          <div style={{ position: 'absolute', top: 0, right: 0, width: '55%', height: '100%', background: `radial-gradient(ellipse at 80% 30%, ${pc}18 0%, transparent 65%)` }} />
         </>
       )}
 
-      {/* ── Brand badge ── */}
+      {/* ── Brand badge top-left: charter logo + optional master logo ── */}
       <motion.div
         initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
         transition={{ duration: .45, ease, delay: .05 }}
         style={{ position: 'absolute', top: 20, left: 'clamp(20px,4vw,48px)', display: 'flex', alignItems: 'center', gap: 10, zIndex: 3 }}
       >
+        {/* Charter logo */}
         {hasLogo && (
           <div style={{
-            width: 38, height: 38, borderRadius: 10, overflow: 'hidden',
+            height: 38, maxWidth: 120, borderRadius: 10, overflow: 'hidden',
             background: onDark ? 'rgba(255,255,255,.15)' : 'rgba(255,255,255,.85)',
             backdropFilter: 'blur(8px)',
             border: `1px solid ${onDark ? 'rgba(255,255,255,.22)' : 'rgba(0,0,0,.06)'}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '4px 8px',
             boxShadow: onDark ? '0 2px 8px rgba(0,0,0,.25)' : '0 1px 6px rgba(0,0,0,.08)',
           }}>
             <img src={logo} alt={businessName} onError={() => setLogoErr(true)}
-              style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+              style={{ height: '100%', maxHeight: 30, objectFit: 'contain' }} />
           </div>
         )}
-        {businessName && (
+
+        {/* Separator if both logos exist */}
+        {hasLogo && hasMasterLogo && (
+          <div style={{ width: 1, height: 24, background: onDark ? 'rgba(255,255,255,.25)' : 'rgba(0,0,0,.12)' }} />
+        )}
+
+        {/* Master / index logo */}
+        {hasMasterLogo && (
+          <div style={{
+            height: 38, maxWidth: 120, borderRadius: 10, overflow: 'hidden',
+            background: onDark ? 'rgba(255,255,255,.12)' : 'rgba(255,255,255,.7)',
+            backdropFilter: 'blur(8px)',
+            border: `1px solid ${onDark ? 'rgba(255,255,255,.15)' : 'rgba(0,0,0,.04)'}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '4px 8px',
+          }}>
+            <img src={masterLogo} alt="powered by" onError={() => setMasterLogoErr(true)}
+              style={{ height: '100%', maxHeight: 28, objectFit: 'contain', opacity: .85 }} />
+          </div>
+        )}
+
+        {/* Fallback: business name text */}
+        {!hasLogo && !hasMasterLogo && businessName && (
           <span style={{
             fontSize: 13, fontWeight: 600, letterSpacing: '.01em',
             color: onDark ? 'rgba(255,255,255,.92)' : 'var(--text-secondary, #64748b)',
@@ -124,26 +145,25 @@ export default function Hero({ data, departureTime }) {
           ? 'clamp(32px,5vw,56px) clamp(20px,4vw,48px)'
           : 'clamp(20px,3vw,36px) clamp(20px,4vw,48px) clamp(24px,3.5vw,40px)',
       }}>
-        {/* Eyebrow */}
+
+        {/* Eyebrow — uses brand accent color */}
         <motion.div variants={line} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-          <div style={{ width: 18, height: 2, borderRadius: 1, background: onDark ? 'rgba(255,255,255,.6)' : pc }} />
-          <span style={{
-            fontSize: 10.5, fontWeight: 600, letterSpacing: '.13em', textTransform: 'uppercase',
-            color: onDark ? 'rgba(255,255,255,.65)' : pc,
-          }}>{eyebrowText}</span>
+          <div style={{ width: 18, height: 2, borderRadius: 1, background: onDark ? pc : pc }} />
+          <span style={{ fontSize: 10.5, fontWeight: 600, letterSpacing: '.13em', textTransform: 'uppercase', color: eyebrowColor }}>
+            {eyebrowText}
+          </span>
         </motion.div>
 
         {/* Headline */}
         <motion.h1 variants={line} style={{
           fontWeight: 700, fontSize: 'clamp(24px, 4.2vw, 46px)',
           lineHeight: 1.08, marginBottom: 14,
-          color: onDark ? '#fff' : 'var(--text-primary, #1e293b)', letterSpacing: '-.025em',
+          color: headlineColor, letterSpacing: '-.025em',
         }}>
           {t(lang, 'heyGreeting')} {firstName} —
           <span style={{
             display: 'block', fontWeight: 300, fontSize: '.68em',
-            color: onDark ? 'rgba(255,255,255,.72)' : 'var(--text-soft, #94a3b8)',
-            marginTop: 5, letterSpacing: '-.01em',
+            color: sublineColor, marginTop: 5, letterSpacing: '-.01em',
           }}>{subText}</span>
         </motion.h1>
 
@@ -166,14 +186,14 @@ export default function Hero({ data, departureTime }) {
           </motion.div>
         )}
 
-        {/* Countdown */}
+        {/* Countdown — custom color or brand accent */}
         {(departureTime || (data?.date && data?.checkIn)) && (
           <motion.div variants={line}>
             <CountdownTimer
               departureTime={departureTime}
               date={data?.date}
               checkIn={data?.checkIn}
-              primaryColor={onDark ? '#fff' : pc}
+              primaryColor={countdownColor || (onDark ? '#fff' : pc)}
               lang={lang}
             />
           </motion.div>
