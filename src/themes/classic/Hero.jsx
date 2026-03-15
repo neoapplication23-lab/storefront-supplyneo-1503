@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import CountdownTimer from '../../components/booking/CountdownTimer'
-import { sanitizeImageSrc, isValidImageSrc } from '../../utils/image'
+import { isValidImageSrc } from '../../utils/image'
 import { t } from '../../i18n'
 
 const ease = [.22, 1, .36, 1]
@@ -10,45 +10,43 @@ const line = { hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transiti
 
 export default function Hero({ data, departureTime }) {
   const appearance     = data?.appearance || {}
-  const pc             = appearance.primaryColor || '#2563eb'
-  const lang           = appearance.language || 'en'
+  const pc             = appearance.primaryColor    || '#2563eb'
+  const logo           = appearance.logo            || null
+  const businessName   = appearance.businessName    || ''
+  const masterLogo     = appearance.masterLogo      || null
+  const lang           = appearance.language        || 'en'
 
-  // Sanitize images — strips whitespace/newlines from base64 that cause ERR_INVALID_URL
-  const logo           = sanitizeImageSrc(appearance.logo)
-  const masterLogo     = sanitizeImageSrc(appearance.masterLogo)
-  const headerImage    = sanitizeImageSrc(appearance.headerImage) || sanitizeImageSrc(appearance.heroImage) || null
+  // Header image — strip whitespace from base64 to avoid ERR_INVALID_URL
+  const rawImg         = appearance.headerImage || appearance.heroImage || null
+  const headerImage    = rawImg ? rawImg.replace(/\s+/g, '') : null
 
-  // Overlay settings
-  const overlayColor   = appearance.heroOverlayColor || '#000000'
+  const overlayColor   = appearance.heroOverlayColor   || '#000000'
   const overlayOpacity = parseFloat(appearance.heroOverlayOpacity ?? 0.55)
 
-  // Text colors — fall back to pc (brand accent) or white on dark
-  const titleColor     = appearance.heroTitleColor   || null
+  // Admin-editable copy — falls back to i18n translation
+  const eyebrowText    = appearance.heroEyebrow?.trim() || t(lang, 'onTheWater')
+  const subText        = appearance.heroSubline?.trim()  || t(lang, 'subHeadline')
+
+  // Admin-editable colors — fall back to sensible defaults
+  const titleColor     = appearance.heroTitleColor     || null
   const countdownColor = appearance.heroCountdownColor || null
 
-  const [logoErr, setLogoErr]               = useState(false)
-  const [masterLogoErr, setMasterLogoErr]   = useState(false)
+  const [logoErr, setLogoErr]             = useState(false)
+  const [masterLogoErr, setMasterLogoErr] = useState(false)
 
-  const hasHeader     = !!headerImage
-  const hasLogo       = !!logo && !logoErr
-  const hasMasterLogo = !!masterLogo && !masterLogoErr
+  const hasHeader     = isValidImageSrc(headerImage)
+  const hasLogo       = isValidImageSrc(logo) && !logoErr
+  const hasMasterLogo = isValidImageSrc(masterLogo) && !masterLogoErr
   const onDark        = hasHeader
   const firstName     = (data?.clientName || '').split(' ')[0] || 'there'
 
-  // Always from i18n — eyebrow and subline use brand accent color
-  const eyebrowText   = t(lang, 'onTheWater')
-  const subText       = t(lang, 'subHeadline')
-
-  // Title "Hey Name —": custom color or white/dark depending on background
-  const headlineColor  = titleColor || (onDark ? '#fff' : 'var(--text-primary, #1e293b)')
-  // Subline: same custom color (slightly muted) or brand accent
-  const sublineColor   = titleColor
-    ? `${titleColor}cc`
-    : (onDark ? 'rgba(255,255,255,.72)' : pc)
+  const headlineColor = titleColor || (onDark ? '#fff'                      : 'var(--text-primary, #1e293b)')
+  const sublineColor  = titleColor || (onDark ? 'rgba(255,255,255,.72)'     : 'var(--text-soft, #94a3b8)')
+  const timerColor    = countdownColor || (onDark ? '#fff' : pc)
 
   const hexToRgb = hex => {
     try {
-      const h = (hex && hex.length === 7) ? hex : '#000000'
+      const h = hex?.length === 7 ? hex : '#000000'
       return `${parseInt(h.slice(1,3),16)},${parseInt(h.slice(3,5),16)},${parseInt(h.slice(5,7),16)}`
     } catch { return '0,0,0' }
   }
@@ -72,14 +70,12 @@ export default function Hero({ data, departureTime }) {
       {/* ── Background ── */}
       {hasHeader ? (
         <>
-          {/* backgroundAttachment:fixed = parallax. Falls back gracefully on mobile */}
           <div style={{
             position: 'absolute', inset: 0,
             backgroundImage: `url(${headerImage})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
+            backgroundSize: 'cover', backgroundPosition: 'center',
+            // Fixed parallax on desktop; scroll on iOS (fixed breaks on Safari mobile)
             backgroundAttachment: 'fixed',
-            // iOS Safari fix: use transform instead of fixed attachment
             WebkitBackgroundAttachment: 'scroll',
           }} />
           <div style={{ position: 'absolute', inset: 0, background: `rgba(${rgb}, ${overlayOpacity})` }} />
@@ -93,7 +89,7 @@ export default function Hero({ data, departureTime }) {
         </>
       )}
 
-      {/* ── Brand badge: charter logo + optional master logo ── */}
+      {/* ── Logos top-left: charter + master ── */}
       <motion.div
         initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
         transition={{ duration: .45, ease, delay: .05 }}
@@ -101,41 +97,38 @@ export default function Hero({ data, departureTime }) {
       >
         {hasLogo && (
           <div style={{
-            height: 38, maxWidth: 120, borderRadius: 10, overflow: 'hidden',
+            height: 38, maxWidth: 120, borderRadius: 10, overflow: 'hidden', padding: '4px 8px',
             background: onDark ? 'rgba(255,255,255,.15)' : 'rgba(255,255,255,.85)',
             backdropFilter: 'blur(8px)',
             border: `1px solid ${onDark ? 'rgba(255,255,255,.22)' : 'rgba(0,0,0,.06)'}`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px 8px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
             boxShadow: onDark ? '0 2px 8px rgba(0,0,0,.25)' : '0 1px 6px rgba(0,0,0,.08)',
           }}>
-            <img src={logo} alt="" onError={() => setLogoErr(true)}
+            <img src={logo} alt={businessName} onError={() => setLogoErr(true)}
               style={{ height: '100%', maxHeight: 30, objectFit: 'contain' }} />
           </div>
         )}
-
         {hasLogo && hasMasterLogo && (
           <div style={{ width: 1, height: 24, background: onDark ? 'rgba(255,255,255,.3)' : 'rgba(0,0,0,.15)' }} />
         )}
-
         {hasMasterLogo && (
           <div style={{
-            height: 38, maxWidth: 120, borderRadius: 10, overflow: 'hidden',
-            background: onDark ? 'rgba(255,255,255,.10)' : 'rgba(255,255,255,.7)',
+            height: 38, maxWidth: 120, borderRadius: 10, overflow: 'hidden', padding: '4px 8px',
+            background: onDark ? 'rgba(255,255,255,.10)' : 'rgba(255,255,255,.70)',
             backdropFilter: 'blur(8px)',
             border: `1px solid ${onDark ? 'rgba(255,255,255,.15)' : 'rgba(0,0,0,.04)'}`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px 8px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
             <img src={masterLogo} alt="" onError={() => setMasterLogoErr(true)}
               style={{ height: '100%', maxHeight: 28, objectFit: 'contain', opacity: .8 }} />
           </div>
         )}
-
-        {!hasLogo && !hasMasterLogo && appearance.businessName && (
+        {!hasLogo && !hasMasterLogo && businessName && (
           <span style={{
             fontSize: 13, fontWeight: 600, letterSpacing: '.01em',
-            color: onDark ? 'rgba(255,255,255,.92)' : 'var(--text-secondary, #64748b)',
+            color: onDark ? 'rgba(255,255,255,.92)' : 'var(--text-secondary)',
             textShadow: onDark ? '0 1px 4px rgba(0,0,0,.35)' : 'none',
-          }}>{appearance.businessName}</span>
+          }}>{businessName}</span>
         )}
       </motion.div>
 
@@ -147,7 +140,7 @@ export default function Hero({ data, departureTime }) {
           : 'clamp(20px,3vw,36px) clamp(20px,4vw,48px) clamp(24px,3.5vw,40px)',
       }}>
 
-        {/* Eyebrow — brand accent color */}
+        {/* Eyebrow — brand accent color, admin-editable text */}
         <motion.div variants={line} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
           <div style={{ width: 18, height: 2, borderRadius: 1, background: pc }} />
           <span style={{ fontSize: 10.5, fontWeight: 600, letterSpacing: '.13em', textTransform: 'uppercase', color: onDark ? pc : pc }}>
@@ -155,7 +148,7 @@ export default function Hero({ data, departureTime }) {
           </span>
         </motion.div>
 
-        {/* Headline: title color or white/dark */}
+        {/* Headline — admin-editable title color */}
         <motion.h1 variants={line} style={{
           fontWeight: 700, fontSize: 'clamp(24px, 4.2vw, 46px)',
           lineHeight: 1.08, marginBottom: 14,
@@ -179,7 +172,7 @@ export default function Hero({ data, departureTime }) {
                 border: `1px solid ${onDark ? 'rgba(255,255,255,.2)' : `${pc}28`}`,
                 backdropFilter: onDark ? 'blur(10px)' : 'none',
                 fontSize: 12, fontWeight: 500,
-                color: onDark ? 'rgba(255,255,255,.9)' : 'var(--text-secondary, #64748b)',
+                color: onDark ? 'rgba(255,255,255,.9)' : 'var(--text-secondary)',
               }}>
                 <span style={{ fontSize: 11 }}>{c.icon}</span>{c.label}
               </span>
@@ -187,14 +180,14 @@ export default function Hero({ data, departureTime }) {
           </motion.div>
         )}
 
-        {/* Countdown: custom color or brand accent */}
+        {/* Countdown — admin-editable color */}
         {(departureTime || (data?.date && data?.checkIn)) && (
           <motion.div variants={line}>
             <CountdownTimer
               departureTime={departureTime}
               date={data?.date}
               checkIn={data?.checkIn}
-              primaryColor={countdownColor || (onDark ? '#fff' : pc)}
+              primaryColor={timerColor}
               lang={lang}
             />
           </motion.div>
