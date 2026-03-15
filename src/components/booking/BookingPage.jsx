@@ -99,6 +99,9 @@ export default function BookingPage({ code }) {
     <NotFound message="Could not load your booking. Please check your connection and try again." />
   )
 
+  // Normalise data — ensure appearance always exists
+  if (!data.appearance) data = { ...data, appearance: {} }
+
   const pc          = data?.appearance?.primaryColor || '#0ea5e9'
   const themeKey    = data?.appearance?.storefrontTheme || data?.appearance?.theme || 'classic'
   const lang        = activeLang || data?.appearance?.language || 'en'
