@@ -172,8 +172,10 @@ export default function ProductCard({ product, qty, primaryColor, onAdd, onRemov
           paddingTop: 8, borderTop: `1px solid ${inCart && !outOfStock ? `${pc}14` : 'rgba(28,28,26,.06)'}`,
           transition: 'border-color 220ms ease',
           marginTop: 'auto',
+          minWidth: 0,
+          overflow: 'hidden',
         }}>
-          <div style={{ minWidth: 0 }}>
+          <div style={{ minWidth: 0, flex: '0 1 auto', overflow: 'hidden' }}>
             {product.comparePrice > 0 && product.comparePrice > product.price && (
               <span style={{
                 display: 'block', fontSize: 10, color: 'var(--text-muted)',
@@ -214,7 +216,7 @@ export default function ProductCard({ product, qty, primaryColor, onAdd, onRemov
                   onClick={e => e.stopPropagation()}
                   style={{ flexShrink: 0 }}
                 >
-                  <Stepper qty={qty} onAdd={atMax ? undefined : onAdd} onRemove={onRemove} primaryColor={pc} maxReached={atMax} />
+                  <Stepper qty={qty} onAdd={atMax ? undefined : onAdd} onRemove={onRemove} primaryColor={pc} maxReached={atMax} compact />
                 </motion.div>
               ) : (
                 <motion.button key={`add-${popKey}`}
