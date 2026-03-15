@@ -101,7 +101,7 @@ export default function BookingPage({ code }) {
 
   const pc          = data.appearance?.primaryColor || '#0ea5e9'
   const themeKey    = data.appearance?.storefrontTheme || data.appearance?.theme || 'classic'
-  const lang        = activeLang || data.appearance?.language || 'en'
+  const lang        = activeLang || data?.appearance?.language || 'en'
   const { Hero, CollectionGrid, ProductSection } = getTheme(themeKey)
   const bundles     = data.bundles    || []
   const thresholds  = data.thresholds || null
@@ -182,7 +182,7 @@ export default function BookingPage({ code }) {
       <Topbar appearance={data.appearance} cartCount={cartCount} cartTotal={cartTotal} onOpenCart={() => !bookingLocked && setCheckoutOpen(true)} lang={lang} onLangChange={setActiveLang} />
 
       <main>
-        <Hero data={{ ...data, appearance: { ...data.appearance, language: lang } }} departureTime={departureTime} />
+        <Hero data={{ ...data, appearance: { ...(data?.appearance || {}), language: lang } }} departureTime={departureTime} />
 
         {bookingLocked && (
           <motion.div
