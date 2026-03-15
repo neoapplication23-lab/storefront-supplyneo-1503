@@ -55,7 +55,7 @@ export default function Hero({ data, departureTime }) {
   return (
     <section style={{
       position: 'relative', overflow: 'hidden',
-      minHeight: hasHeader ? 'clamp(340px, 50vh, 560px)' : 'clamp(200px, 26vh, 280px)',
+      height: hasHeader ? 320 : 220,
       display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
     }}>
 
