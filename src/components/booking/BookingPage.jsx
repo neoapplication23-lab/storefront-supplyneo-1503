@@ -93,8 +93,12 @@ export default function BookingPage({ code }) {
   const [showStore, setShowStore]                 = useState(false)
   const [activeFilter, setActiveFilter]           = useState(null)
   const [selectedCollection, setSelectedCollection] = useState(null)
-  const [activeLang, setActiveLang]               = useState(null)   // chosen by client
-  const [langSelected, setLangSelected]           = useState(false)  // has client picked?
+  // Auto-detect language from browser; fallback to 'en'
+  const [activeLang, setActiveLang] = useState(() => {
+    const supported = ['en', 'es', 'fr', 'de', 'it']
+    const browser = (navigator.language || navigator.userLanguage || 'en').slice(0, 2).toLowerCase()
+    return supported.includes(browser) ? browser : 'en'
+  })
 
   const products    = data?.products || []
   const cartUpsells = useUpsell(items, products, 1)
@@ -157,11 +161,6 @@ export default function BookingPage({ code }) {
   if (error === 'network') return (
     <NotFound message="Could not load your booking. Please check your connection and try again." />
   )
-
-  // ── Language selection screen (first thing client sees) ──
-  if (!langSelected) {
-    return <LangSelectScreen onSelect={lang => { setActiveLang(lang); setLangSelected(true) }} />
-  }
 
   // Ensure appearance always exists
   if (!data.appearance) data = { ...data, appearance: {} }
