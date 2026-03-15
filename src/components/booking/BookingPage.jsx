@@ -8,7 +8,7 @@ import CartBar from '../layout/CartBar'
 import CategoryNav from './CategoryNav'
 import FeaturedBundle from './FeaturedBundle'
 import { getTheme } from '../../themes'
-import { t } from '../../i18n'
+import { t, LANGUAGES } from '../../i18n'
 import PrepWindowBanner from './PrepWindowBanner'
 import SuccessScreen from './SuccessScreen'
 import NotFound from './NotFound'
@@ -16,6 +16,65 @@ import Spinner from '../ui/Spinner'
 import CheckoutDrawer from '../checkout/CheckoutDrawer'
 import ShipAnimation from './ShipAnimation'
 import { motion } from 'framer-motion'
+
+// ── Language selection screen shown on first visit ──────────
+function LangSelectScreen({ onSelect }) {
+  const langs = [
+    { code: 'en', label: 'English',  flag: '🇬🇧' },
+    { code: 'es', label: 'Español',  flag: '🇪🇸' },
+    { code: 'fr', label: 'Français', flag: '🇫🇷' },
+    { code: 'de', label: 'Deutsch',  flag: '🇩🇪' },
+    { code: 'it', label: 'Italiano', flag: '🇮🇹' },
+  ]
+  return (
+    <div style={{
+      minHeight: '100vh', display: 'flex', alignItems: 'center',
+      justifyContent: 'center', background: '#07080f',
+      fontFamily: 'var(--font-body, system-ui, sans-serif)',
+    }}>
+      <div style={{ textAlign: 'center', padding: '32px 24px' }}>
+        <div style={{ fontSize: 44, marginBottom: 18 }}>⚓</div>
+        <h2 style={{
+          color: '#fff', fontWeight: 700, fontSize: 22,
+          letterSpacing: '-.01em', marginBottom: 8,
+        }}>
+          Select your language
+        </h2>
+        <p style={{ color: 'rgba(255,255,255,.4)', fontSize: 13, marginBottom: 32 }}>
+          Selecciona · Choisissez · Wählen Sie · Seleziona
+        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, minWidth: 240 }}>
+          {langs.map(l => (
+            <button
+              key={l.code}
+              onClick={() => onSelect(l.code)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 14,
+                padding: '14px 20px', borderRadius: 12,
+                background: 'rgba(255,255,255,.06)',
+                border: '1px solid rgba(255,255,255,.10)',
+                color: '#fff', fontSize: 15, fontWeight: 500,
+                cursor: 'pointer', transition: 'all .15s',
+                textAlign: 'left',
+              }}
+              onMouseOver={e => {
+                e.currentTarget.style.background = 'rgba(255,255,255,.13)'
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,.22)'
+              }}
+              onMouseOut={e => {
+                e.currentTarget.style.background = 'rgba(255,255,255,.06)'
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,.10)'
+              }}
+            >
+              <span style={{ fontSize: 24, lineHeight: 1 }}>{l.flag}</span>
+              {l.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default function BookingPage({ code }) {
   const { data, loading, error, refetch } = useBooking(code)
@@ -26,20 +85,20 @@ export default function BookingPage({ code }) {
   const total  = useCartStore(s => s.total)
 
   // ── ALL hooks must be declared before any early returns ──
-  const [checkoutOpen, setCheckoutOpen] = useState(false)
-  const [orders, setOrders]             = useState([])
-  const [finalTotal, setFinalTotal]     = useState(0)
-  const [showShip, setShowShip]         = useState(false)
-  const [shipShown, setShipShown]       = useState(false)
-  const [showStore, setShowStore]       = useState(false)
-  const [activeFilter, setActiveFilter]  = useState(null)
+  const [checkoutOpen, setCheckoutOpen]           = useState(false)
+  const [orders, setOrders]                       = useState([])
+  const [finalTotal, setFinalTotal]               = useState(0)
+  const [showShip, setShowShip]                   = useState(false)
+  const [shipShown, setShipShown]                 = useState(false)
+  const [showStore, setShowStore]                 = useState(false)
+  const [activeFilter, setActiveFilter]           = useState(null)
   const [selectedCollection, setSelectedCollection] = useState(null)
-  const [activeLang, setActiveLang] = useState(null)
+  const [activeLang, setActiveLang]               = useState(null)   // chosen by client
+  const [langSelected, setLangSelected]           = useState(false)  // has client picked?
 
   const products    = data?.products || []
   const cartUpsells = useUpsell(items, products, 1)
-
-  const departureTime  = data?.departureTime || null
+  const departureTime = data?.departureTime || null
 
   // Build a real Date from departureTime OR date+checkIn
   const resolvedDeparture = (() => {
@@ -63,9 +122,9 @@ export default function BookingPage({ code }) {
     return null
   })()
 
-  const timeToCheckin  = resolvedDeparture ? (resolvedDeparture - Date.now()) : Infinity
-  const underOneHour   = timeToCheckin > 0 && timeToCheckin < 3600000
-  const checkinPassed  = resolvedDeparture ? timeToCheckin <= 0 : false
+  const timeToCheckin = resolvedDeparture ? (resolvedDeparture - Date.now()) : Infinity
+  const underOneHour  = timeToCheckin > 0 && timeToCheckin < 3600000
+  const checkinPassed = resolvedDeparture ? timeToCheckin <= 0 : false
 
   useEffect(() => {
     if (underOneHour && !shipShown && !loading && data) {
@@ -99,16 +158,21 @@ export default function BookingPage({ code }) {
     <NotFound message="Could not load your booking. Please check your connection and try again." />
   )
 
+  // ── Language selection screen (first thing client sees) ──
+  if (!langSelected) {
+    return <LangSelectScreen onSelect={lang => { setActiveLang(lang); setLangSelected(true) }} />
+  }
+
   // Ensure appearance always exists
   if (!data.appearance) data = { ...data, appearance: {} }
 
-  const pc          = data?.appearance?.primaryColor || '#0ea5e9'
-  const themeKey    = data?.appearance?.storefrontTheme || data?.appearance?.theme || 'classic'
-  const lang        = activeLang || data?.appearance?.language || 'en'
+  const pc       = data?.appearance?.primaryColor || '#2563eb'
+  const themeKey = data?.appearance?.storefrontTheme || data?.appearance?.theme || 'classic'
+  const lang     = activeLang || 'en'
   const { Hero, CollectionGrid, ProductSection } = getTheme(themeKey)
-  const bundles     = data.bundles    || []
-  const thresholds  = data.thresholds || null
-  // Use real collections from API; fall back to product categories if none defined
+  const bundles    = data.bundles    || []
+  const thresholds = data.thresholds || null
+
   const rawCollections = data?.collections || []
   const collections = rawCollections.length > 0
     ? rawCollections.filter(col => col.productIds?.some(pid => products.find(p => p.id === pid)))
@@ -116,8 +180,8 @@ export default function BookingPage({ code }) {
         id: `cat_${i}`, name: cat,
         productIds: products.filter(p => p.category === cat).map(p => p.id)
       }))
-  const categories = collections.map(c => c.name)
-  const sectionIds = collections.map((_, i) => `bksec_${i}`)
+  const categories  = collections.map(c => c.name)
+  const sectionIds  = collections.map((_, i) => `bksec_${i}`)
   const cartCount   = Object.values(items).reduce((a, b) => a + b, 0)
   const cartTotal   = total(products)
   const cartHasItems = cartCount > 0
@@ -158,7 +222,7 @@ export default function BookingPage({ code }) {
     setCheckoutOpen(false)
   }
 
-  // Success screen — after order, cart empty, not explicitly returning to store
+  // Success screen
   if (hasDoneOrder && cartCount === 0 && !checkoutOpen && !showStore) {
     return (
       <>
@@ -182,10 +246,20 @@ export default function BookingPage({ code }) {
 
   return (
     <>
-      <Topbar appearance={data?.appearance || {}} cartCount={cartCount} cartTotal={cartTotal} onOpenCart={() => !bookingLocked && setCheckoutOpen(true)} lang={lang} onLangChange={setActiveLang} />
+      <Topbar
+        appearance={data?.appearance || {}}
+        cartCount={cartCount}
+        cartTotal={cartTotal}
+        onOpenCart={() => !bookingLocked && setCheckoutOpen(true)}
+        lang={lang}
+        onLangChange={l => setActiveLang(l)}
+      />
 
       <main>
-        <Hero data={{ ...data, appearance: { ...(data?.appearance || {}), language: lang } }} departureTime={departureTime} />
+        <Hero
+          data={{ ...data, appearance: { ...(data?.appearance || {}), language: lang } }}
+          departureTime={departureTime}
+        />
 
         {bookingLocked && (
           <motion.div
@@ -224,12 +298,17 @@ export default function BookingPage({ code }) {
           </motion.div>
         )}
 
-        {/* Only show CategoryNav in flat mode (no collections grid) */}
         {collections.length === 0 && (
-          <CategoryNav collections={collections} sectionIds={sectionIds} primaryColor={pc} onFilterChange={setActiveFilter} activeFilter={activeFilter} products={products} />
+          <CategoryNav
+            collections={collections}
+            sectionIds={sectionIds}
+            primaryColor={pc}
+            onFilterChange={setActiveFilter}
+            activeFilter={activeFilter}
+            products={products}
+          />
         )}
 
-        {/* PrepWindow banner always visible */}
         <div style={{ maxWidth: 900, margin: '0 auto', padding: '0 clamp(16px,4vw,28px)' }}>
           <PrepWindowBanner
             departureTime={resolvedDeparture ? resolvedDeparture.toISOString() : departureTime}
@@ -243,7 +322,6 @@ export default function BookingPage({ code }) {
 
         {collections.length > 0 ? (
           selectedCollection ? (
-            /* ── Inside a collection: show tag-filtered product grid ── */
             <div style={{ maxWidth: 900, margin: '0 auto', padding: '0 clamp(16px,4vw,28px) 160px' }}>
               <ProductSection
                 key={selectedCollection.id}
@@ -256,7 +334,6 @@ export default function BookingPage({ code }) {
               />
             </div>
           ) : (
-            /* ── Collection grid ── */
             <CollectionGrid
               collections={collections}
               products={products}
@@ -265,9 +342,8 @@ export default function BookingPage({ code }) {
             />
           )
         ) : (
-          /* ── No collections: flat category list ── */
           <div style={{ maxWidth: 900, margin: '0 auto', padding: 'clamp(24px,4vw,40px) clamp(16px,4vw,28px) 160px' }}>
-            {(activeFilter ? collections.filter(c => c.name === activeFilter) : collections).map((col, i) => (
+            {(activeFilter ? collections.filter(c => c.name === activeFilter) : collections).map((col) => (
               <ProductSection
                 key={col.id}
                 category={col.name}
