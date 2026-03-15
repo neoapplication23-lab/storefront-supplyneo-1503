@@ -8,6 +8,7 @@ import CartBar from '../layout/CartBar'
 import CategoryNav from './CategoryNav'
 import FeaturedBundle from './FeaturedBundle'
 import { getTheme } from '../../themes'
+import { t } from '../../i18n'
 import PrepWindowBanner from './PrepWindowBanner'
 import SuccessScreen from './SuccessScreen'
 import NotFound from './NotFound'
@@ -33,6 +34,7 @@ export default function BookingPage({ code }) {
   const [showStore, setShowStore]       = useState(false)
   const [activeFilter, setActiveFilter]  = useState(null)
   const [selectedCollection, setSelectedCollection] = useState(null)
+  const [activeLang, setActiveLang] = useState(null) // null = use appearance default
 
   const products    = data?.products || []
   const cartUpsells = useUpsell(items, products, 1)
@@ -99,6 +101,7 @@ export default function BookingPage({ code }) {
 
   const pc          = data.appearance?.primaryColor || '#0ea5e9'
   const themeKey    = data.appearance?.storefrontTheme || data.appearance?.theme || 'classic'
+  const lang        = activeLang || data.appearance?.language || 'en'
   const { Hero, CollectionGrid, ProductSection } = getTheme(themeKey)
   const bundles     = data.bundles    || []
   const thresholds  = data.thresholds || null
@@ -176,10 +179,10 @@ export default function BookingPage({ code }) {
 
   return (
     <>
-      <Topbar appearance={data.appearance} cartCount={cartCount} cartTotal={cartTotal} onOpenCart={() => !bookingLocked && setCheckoutOpen(true)} />
+      <Topbar appearance={data.appearance} cartCount={cartCount} cartTotal={cartTotal} onOpenCart={() => !bookingLocked && setCheckoutOpen(true)} lang={lang} onLangChange={setActiveLang} />
 
       <main>
-        <Hero data={data} departureTime={departureTime} />
+        <Hero data={{ ...data, appearance: { ...data.appearance, language: lang } }} departureTime={departureTime} />
 
         {bookingLocked && (
           <motion.div
