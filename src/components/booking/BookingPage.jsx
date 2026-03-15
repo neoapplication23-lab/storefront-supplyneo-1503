@@ -98,7 +98,7 @@ export default function BookingPage({ code }) {
   )
 
   const pc          = data.appearance?.primaryColor || '#0ea5e9'
-  const themeKey    = data.appearance?.theme || 'classic'
+  const themeKey    = data.appearance?.storefrontTheme || data.appearance?.theme || 'classic'
   const { Hero, CollectionGrid, ProductSection } = getTheme(themeKey)
   const bundles     = data.bundles    || []
   const thresholds  = data.thresholds || null
