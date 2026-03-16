@@ -200,7 +200,8 @@ export default function CheckoutDrawer({
     setLoading(true)
     try {
       // APA orders: no payment required — submit directly
-      if (!isApa && STRIPE_PK && stripeSubmitRef.current) {
+      // Also skip Stripe if it failed to init (stripeInitError) or no PK configured
+      if (!isApa && STRIPE_PK && stripeSubmitRef.current && !stripeInitError) {
         // Step 1: Confirm payment with Stripe (throws on failure)
         await stripeSubmitRef.current(window.location.href)
         // If we reach here, payment was confirmed successfully
@@ -448,7 +449,14 @@ export default function CheckoutDrawer({
                     {renderGhostBtn(() => goTo(1), '← Back')}
                     {renderPrimaryBtn(
                       handleSubmit,
-                      loading || (!isApa && STRIPE_PK ? (stripeLoading || (!clientSecret && !stripeInitError) || !stripeReady) : false),
+                      (() => {
+                        if (loading) return true
+                        if (isApa) return false
+                        // Real Stripe: wait for clientSecret + stripeReady
+                        if (STRIPE_PK && clientSecret && !stripeInitError) return stripeLoading || !stripeReady
+                        // Stripe failed or no PK: always allow submit
+                        return false
+                      })(),
                       loading ? 'Processing…' : isApa ? 'Confirm Order ✓' : 'Confirm My Order 🔒'
                     )}
                   </>
