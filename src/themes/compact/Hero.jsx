@@ -7,7 +7,7 @@ import { t } from '../../i18n'
 export default function Hero({ data, departureTime }) {
   const appearance     = data?.appearance || {}
   const pc             = appearance.primaryColor    || '#2563eb'
-  const logo           = appearance.logo            || null
+  const logo           = appearance.storefrontLogo  || appearance.logo            || null
   const businessName   = appearance.businessName    || ''
   const masterLogo     = appearance.masterLogo      || null
   const lang           = appearance.language        || 'en'
