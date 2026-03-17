@@ -197,10 +197,16 @@ export default function BookingPage({ code }) {
 
   async function handleSubmit({ form, cartLines, cartTotal: ct }) {
     const orderId = `${data.id}-${Date.now()}`
+    // Normalise items to the rich format the API expects:
+    // [{ id, qty, variantIndex }] — variantIndex is -1 for non-variant products
+    const normalisedItems = Object.entries(items).map(([id, qty]) => {
+      const prod = products.find(p => String(p.id) === String(id))
+      return { id, qty, variantIndex: -1, ...(prod?.selectedVariantIndex != null ? { variantIndex: prod.selectedVariantIndex } : {}) }
+    })
     await submitOrder({
       linkId:   data.id,
       orderId,
-      items,
+      items:    normalisedItems,
       total:    ct,
       clientDetails: {
         fullName:  form.name,
