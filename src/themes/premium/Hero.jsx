@@ -9,7 +9,7 @@ const ease = [.22, 1, .36, 1]
 export default function Hero({ data, departureTime }) {
   const appearance     = data?.appearance || {}
   const pc             = appearance.primaryColor    || '#c9a84c'
-  const logo           = appearance.logo            || null
+  const logo           = appearance.storefrontLogo  || appearance.logo            || null
   const businessName   = appearance.businessName    || ''
   const masterLogo     = appearance.masterLogo      || null
   const lang           = appearance.language        || 'en'
