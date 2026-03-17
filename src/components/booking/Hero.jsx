@@ -11,7 +11,7 @@ const line = { hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transiti
 export default function Hero({ data, departureTime }) {
   const appearance   = data?.appearance || {}
   const pc           = appearance.primaryColor || '#2563eb'
-  const logo         = appearance.logo || null
+  const logo         = appearance.storefrontLogo || appearance.logo || null
   const businessName = appearance.businessName || ''
   const headerImage  = appearance.headerImage || appearance.heroImage || appearance.coverImage || null
   const boat         = data?.boat?.boat_name || ''
