@@ -102,7 +102,11 @@ export default function CheckoutDrawer({
   const cartLines = Object.entries(items)
     .map(([id, qty]) => ({ product: products.find(p => String(p.id) === id), qty }))
     .filter(l => l.product && l.qty > 0)
-  const cartTotal = cartLines.reduce((s, l) => s + parseFloat(l.product.price) * l.qty, 0)
+  // Use priceOverride from inventory_calendar when available (seasonal/location pricing)
+  const cartTotal = cartLines.reduce((s, l) => {
+    const unitPrice = l.product.priceOverride != null ? parseFloat(l.product.priceOverride) : parseFloat(l.product.price)
+    return s + unitPrice * l.qty
+  }, 0)
   const cartCount = cartLines.reduce((s, l) => s + l.qty, 0)
 
   const upsellSuggestions = useUpsell(items, products, 4)
@@ -549,7 +553,7 @@ function StepReview({ cartLines, cartTotal, pc, onAdd, onRemove, upsellSuggestio
                 {formatPrice(p.price)} each
               </p>
             </div>
-            <Stepper qty={qty} onAdd={() => onAdd(p.id)} onRemove={() => onRemove(p.id)} primaryColor={pc} />
+            <Stepper qty={qty} onAdd={() => onAdd(p.id, p.availableQty ?? Infinity)} onRemove={() => onRemove(p.id)} primaryColor={pc} />
             <span style={{
               fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13.5,
               color: 'var(--text-primary)', minWidth: 56, textAlign: 'right', flexShrink: 0,
@@ -580,7 +584,7 @@ function StepReview({ cartLines, cartTotal, pc, onAdd, onRemove, upsellSuggestio
           <UpsellRow
             suggestions={upsellSuggestions}
             primaryColor={pc}
-            onAdd={id => onAdd(id)}
+            onAdd={id => { const p = (products||[]).find(x => String(x.id) === String(id)); onAdd(id, p?.availableQty ?? Infinity) }}
             cartItems={cartItems}
             compact={true}
             label="You might also want…"
@@ -1093,5 +1097,3 @@ function CountrySelect({ value, onChange, hasError, isValid, pc }) {
     </div>
   )
 }
-
-
