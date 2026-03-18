@@ -144,7 +144,7 @@ export default function ProductSection({ category, products, sectionId, primaryC
                   product={p}
                   qty={items[p.id] || 0}
                   primaryColor={pc}
-                  onAdd={() => add(p.id)}
+                  onAdd={() => add(p.id, p.availableQty ?? Infinity)}
                   onRemove={() => remove(p.id)}
                   onOpenModal={() => setModalProduct(p)}
                 />
@@ -171,12 +171,12 @@ export default function ProductSection({ category, products, sectionId, primaryC
             product={modalProduct}
             qty={modalQty}
             primaryColor={pc}
-            onAdd={() => add(modalProduct.id)}
+            onAdd={() => add(modalProduct.id, modalProduct.availableQty ?? Infinity)}
             onRemove={() => remove(modalProduct.id)}
             onClose={() => setModalProduct(null)}
             upsellSuggestions={modalUpsells}
             cartItems={items}
-            onUpsellAdd={id => add(id)}
+            onUpsellAdd={id => { const up = allProducts.concat(products).find(x => String(x.id) === String(id)); add(id, up?.availableQty ?? Infinity) }}
           />
         )}
       </AnimatePresence>
