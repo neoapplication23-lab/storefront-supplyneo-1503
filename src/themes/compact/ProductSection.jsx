@@ -105,7 +105,7 @@ export default function ProductSection({ category, products, sectionId, primaryC
             <motion.div key={activeTag || 'all'} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: .15 }}>
               {visible.map(p => (
                 <ProductCard key={p.id} product={p} qty={items[p.id] || 0}
-                  primaryColor={pc} onAdd={() => add(p.id)} onRemove={() => remove(p.id)}
+                  primaryColor={pc} onAdd={() => add(p.id, p.availableQty ?? Infinity)} onRemove={() => remove(p.id)}
                   onOpenModal={() => setModal(p)} />
               ))}
             </motion.div>
@@ -116,9 +116,9 @@ export default function ProductSection({ category, products, sectionId, primaryC
       <AnimatePresence>
         {modal && (
           <ProductModal key={modal.id} product={modal} qty={modalQty} primaryColor={pc}
-            onAdd={() => add(modal.id)} onRemove={() => remove(modal.id)}
+            onAdd={() => add(modal.id, modal.availableQty ?? Infinity)} onRemove={() => remove(modal.id)}
             onClose={() => setModal(null)} upsellSuggestions={upsells}
-            cartItems={items} onUpsellAdd={id => add(id)} />
+            cartItems={items} onUpsellAdd={id => { const up = allProducts.concat(products).find(x => String(x.id) === String(id)); add(id, up?.availableQty ?? Infinity) }} />
         )}
       </AnimatePresence>
     </>
