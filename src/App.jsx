@@ -3,18 +3,25 @@ import BookingPage from './components/booking/BookingPage'
 import NotFound from './components/booking/NotFound'
 
 function resolveBookingCode() {
+  // 1. Injected by Laravel storefront.blade.php
+  if (typeof window !== 'undefined' && window.__SN_BOOKING_CODE__) {
+    return window.__SN_BOOKING_CODE__
+  }
+  // 2. URL path: /booking/{code}
   const pathMatch = window.location.pathname.match(/\/booking\/([^/?#]+)/)
   if (pathMatch?.[1]) return pathMatch[1]
+  // 3. Query string: ?booking=xxx or ?code=xxx
   const params = new URLSearchParams(window.location.search)
   const qCode = params.get('booking') || params.get('code')
   if (qCode) return qCode
+  // 4. Dev fallback
   if (import.meta.env.DEV && import.meta.env.VITE_DEV_BOOKING_CODE) {
     return import.meta.env.VITE_DEV_BOOKING_CODE
   }
   return null
 }
 
-// ── Error boundary to catch any unexpected render errors ──
+// ── Error boundary ────────────────────────────────────────────────────────
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props)
