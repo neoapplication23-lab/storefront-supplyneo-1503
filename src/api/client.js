@@ -4,57 +4,38 @@
  * Priority order for API base URL:
  *  1. window.__SN_API_BASE__  (injected by the Laravel storefront.blade.php)
  *  2. VITE_API_URL env var     (dev overrides)
- *  3. https://supplyneo.com/admin/api.php  (legacy fallback for old PHP API)
- *
- * When served from Laravel the API is at /api/booking/{code}
- * When served from the old cPanel the API is at api.php?action=get_booking&code=...
+ *  3. https://app.supplyneo.com/api  (production fallback — Laravel REST API)
  */
 
 function resolveApiBase() {
-  // Laravel shell sets this global
+  // Laravel shell sets this global when served embedded
   if (typeof window !== 'undefined' && window.__SN_API_BASE__) {
     return window.__SN_API_BASE__
   }
   if (import.meta.env.DEV) {
-    return import.meta.env.VITE_API_URL || 'https://supplyneo.com/admin/api.php'
+    return import.meta.env.VITE_API_URL || 'https://app.supplyneo.com/api'
   }
-  return 'https://supplyneo.com/admin/api.php'
+  // When served standalone from a subdomain (e.g. yachtcocatering.supplyneo.com)
+  // always point to the central Laravel API
+  return 'https://app.supplyneo.com/api'
 }
 
 const BASE = resolveApiBase()
 
 /**
- * Detect whether we're using the new Laravel REST API or the old PHP action API.
- * Laravel API: BASE ends with /api  (e.g. https://app.supplyneo.com/api)
- * Old API:     BASE ends with api.php
+ * Always uses the Laravel REST API.
+ * GET  /api/booking/{code}
+ * POST /api/booking/{code}
  */
-const IS_LARAVEL = !BASE.endsWith('api.php')
-
 async function request(action, data = {}, method = 'GET') {
-  let url, opts = { method }
+  const code = data.code || (typeof window !== 'undefined' && window.__SN_BOOKING_CODE__) || ''
+  const url = new URL(`${BASE}/booking/${code}`, 'https://app.supplyneo.com')
 
-  if (IS_LARAVEL) {
-    // Laravel REST style: GET /api/booking/{code}  POST /api/booking/{code}
-    const code = data.code || (typeof window !== 'undefined' && window.__SN_BOOKING_CODE__) || ''
-    url = new URL(`${BASE}/booking/${code}`, window.location.origin)
+  const opts = { method }
 
-    if (method === 'GET') {
-      // No extra params needed — code is in the path
-    } else {
-      opts.headers = { 'Content-Type': 'application/json' }
-      opts.body = JSON.stringify(data)
-    }
-  } else {
-    // Legacy PHP action API
-    url = new URL(BASE)
-    url.searchParams.set('action', action)
-
-    if (method === 'GET') {
-      Object.entries(data).forEach(([k, v]) => url.searchParams.set(k, v))
-    } else {
-      opts.headers = { 'Content-Type': 'application/json' }
-      opts.body = JSON.stringify(data)
-    }
+  if (method !== 'GET') {
+    opts.headers = { 'Content-Type': 'application/json' }
+    opts.body = JSON.stringify(data)
   }
 
   const res = await fetch(url.toString(), opts)
