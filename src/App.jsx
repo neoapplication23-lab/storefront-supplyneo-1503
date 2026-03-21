@@ -9,11 +9,17 @@ function resolveBookingCode() {
   }
   // 2. URL path: /booking/{code}
   const pathMatch = window.location.pathname.match(/\/booking\/([^/?#]+)/)
-  if (pathMatch?.[1]) return pathMatch[1]
+  if (pathMatch?.[1]) {
+    window.__SN_BOOKING_CODE__ = pathMatch[1]
+    return pathMatch[1]
+  }
   // 3. Query string: ?booking=xxx or ?code=xxx
   const params = new URLSearchParams(window.location.search)
   const qCode = params.get('booking') || params.get('code')
-  if (qCode) return qCode
+  if (qCode) {
+    window.__SN_BOOKING_CODE__ = qCode
+    return qCode
+  }
   // 4. Dev fallback
   if (import.meta.env.DEV && import.meta.env.VITE_DEV_BOOKING_CODE) {
     return import.meta.env.VITE_DEV_BOOKING_CODE
