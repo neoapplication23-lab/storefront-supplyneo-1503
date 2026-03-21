@@ -1,17 +1,20 @@
 /**
- * Resolve the API base URL dynamically from the current hostname.
+ * API client for the React storefront.
  *
- * All brokers share the same cPanel API at supplyneo.com regardless
- * of which subdomain they're accessing the storefront from.
+ * Priority order for API base URL:
+ *  1. window.__SN_API_BASE__  (injected by the Laravel storefront.blade.php)
+ *  2. VITE_API_URL env var     (dev overrides)
+ *  3. https://supplyneo.com/admin/api.php  (legacy fallback for old PHP API)
  *
- * charteribiza.supplyneo.com  →  https://supplyneo.com/admin/api.php
- * chartermallorca.supplyneo.com → https://supplyneo.com/admin/api.php
- * *.vercel.app (preview)       →  https://supplyneo.com/admin/api.php
- * localhost                    →  fallback to VITE_API_URL (for dev)
+ * When served from Laravel the API is at /api/booking/{code}
+ * When served from the old cPanel the API is at api.php?action=get_booking&code=...
  */
+
 function resolveApiBase() {
-  // Always use the central cPanel API — never the subdomain
-  // (subdomains point to Vercel which has no PHP)
+  // Laravel shell sets this global
+  if (typeof window !== 'undefined' && window.__SN_API_BASE__) {
+    return window.__SN_API_BASE__
+  }
   if (import.meta.env.DEV) {
     return import.meta.env.VITE_API_URL || 'https://supplyneo.com/admin/api.php'
   }
@@ -20,17 +23,38 @@ function resolveApiBase() {
 
 const BASE = resolveApiBase()
 
+/**
+ * Detect whether we're using the new Laravel REST API or the old PHP action API.
+ * Laravel API: BASE ends with /api  (e.g. https://app.supplyneo.com/api)
+ * Old API:     BASE ends with api.php
+ */
+const IS_LARAVEL = !BASE.endsWith('api.php')
+
 async function request(action, data = {}, method = 'GET') {
-  const url = new URL(BASE)
-  url.searchParams.set('action', action)
+  let url, opts = { method }
 
-  const opts = { method }
+  if (IS_LARAVEL) {
+    // Laravel REST style: GET /api/booking/{code}  POST /api/booking/{code}
+    const code = data.code || (typeof window !== 'undefined' && window.__SN_BOOKING_CODE__) || ''
+    url = new URL(`${BASE}/booking/${code}`, window.location.origin)
 
-  if (method === 'GET') {
-    Object.entries(data).forEach(([k, v]) => url.searchParams.set(k, v))
+    if (method === 'GET') {
+      // No extra params needed — code is in the path
+    } else {
+      opts.headers = { 'Content-Type': 'application/json' }
+      opts.body = JSON.stringify(data)
+    }
   } else {
-    opts.headers = { 'Content-Type': 'application/json' }
-    opts.body = JSON.stringify(data)
+    // Legacy PHP action API
+    url = new URL(BASE)
+    url.searchParams.set('action', action)
+
+    if (method === 'GET') {
+      Object.entries(data).forEach(([k, v]) => url.searchParams.set(k, v))
+    } else {
+      opts.headers = { 'Content-Type': 'application/json' }
+      opts.body = JSON.stringify(data)
+    }
   }
 
   const res = await fetch(url.toString(), opts)
