@@ -18,10 +18,14 @@ export default function useStripePayment({ amount, currency = 'eur', enabled = f
     setLoading(true)
     setError(null)
 
-    // Always use the central cPanel API
-    const base = 'https://supplyneo.com/admin/api.php'
+    // Always use the central Laravel API
+    const base = (typeof window !== 'undefined' && window.__SN_API_BASE__)
+      ? window.__SN_API_BASE__
+      : 'https://app.supplyneo.com/api'
 
-    fetch(`${base}?action=create_payment_intent`, {
+    const code = (typeof window !== 'undefined' && window.__SN_BOOKING_CODE__) || ''
+
+    fetch(`${base}/booking/${code}/payment-intent`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ amount: Math.round(amount * 100), currency }),
